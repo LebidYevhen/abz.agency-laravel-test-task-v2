@@ -31,8 +31,8 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
             'phone' => fake()->phoneNumber(),
-            'photo' => fake()->imageUrl(200, 200, 'people'),
-            'position_id' => Position::query()->inRandomOrder()->value('id') ?? Position::factory(),
+            'photo' => fake()->imageUrl(70, 70, 'people', format: 'jpg'),
+            'position_id' => Position::query()->inRandomOrder()->value('id') ?? Position::factory()->create()->id,
         ];
     }
 
