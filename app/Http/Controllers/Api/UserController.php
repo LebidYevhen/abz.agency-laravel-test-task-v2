@@ -23,6 +23,14 @@ class UserController extends Controller
         ]);
 
         if ($validator->fails()) {
+            $errors = $validator->errors();
+            if ($errors->has('email') || $errors->has('phone')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User with this phone or email already exists'
+                ], 409);
+            }
+
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
 
