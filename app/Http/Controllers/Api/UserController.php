@@ -14,6 +14,13 @@ class UserController extends Controller
 {
     public function store(Request $request): JsonResponse
     {
+        if (User::where('email', $request->email)->orWhere('phone', $request->phone)->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User with this phone or email already exists.'
+            ], 409);
+        }
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|min:2|max:60',
             'email' => 'required|email:rfc,dns|unique:users',
@@ -23,8 +30,15 @@ class UserController extends Controller
         ]);
 
         if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        if ($validator->fails()) {
             $errors = $validator->errors();
-            if ($errors->has('email') || $errors->has('phone')) {
+            if (
+                ($errors->has('email') && $request->filled('email')) ||
+                ($errors->has('phone') && $request->filled('phone'))
+            ) {
                 return response()->json([
                     'success' => false,
                     'message' => 'User with this phone or email already exists'
@@ -71,7 +85,9 @@ class UserController extends Controller
         $count = $request->query('count', 10);
         $page = $request->query('page', 1);
 
-        $users = User::with('position')->paginate($count, ['id', 'name', 'email', 'phone', 'position_id', 'photo'], 'page', $page);
+        $users = User::with('position')
+            ->orderBy('created_at', 'desc')
+            ->paginate($count, ['id', 'name', 'email', 'phone', 'position_id', 'photo'], 'page', $page);
 
         if ($page > $users->lastPage() && $users->total() > 0) {
             return response()->json([

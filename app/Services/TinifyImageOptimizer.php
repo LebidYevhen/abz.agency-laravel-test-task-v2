@@ -11,8 +11,8 @@ class TinifyImageOptimizer implements ImageOptimizerInterface
     {
         \Tinify\setKey(env('TINYPNG_API_KEY'));
 
-        $filePath = $file->store('', 'public_uploads');
-        $fullPath = Storage::disk('public_uploads')->path($filePath);
+        $filePath = $file->store('', 'public');
+        $fullPath = Storage::disk('public')->path($filePath);
 
         if (!file_exists($fullPath)) {
             throw new \Exception("File not found: $fullPath");
@@ -25,11 +25,11 @@ class TinifyImageOptimizer implements ImageOptimizerInterface
             "height" => 70
         ]);
 
-        $optimizedPath = public_path('uploads/' . uniqid() . '.jpg');
-        $resized->toFile($optimizedPath);
+        $newFileName = uniqid() . '.jpg';
+        Storage::disk('public')->put($newFileName, $resized->toBuffer());
 
-        Storage::disk('public_uploads')->delete($filePath);
+        Storage::disk('public')->delete($filePath);
 
-        return url('uploads/' . basename($optimizedPath));
+        return $newFileName;
     }
 }
