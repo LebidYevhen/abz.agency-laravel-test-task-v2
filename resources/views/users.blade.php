@@ -76,9 +76,27 @@
         </tbody>
     </table>
     <button class="btn btn-primary js-show-more">Show More</button>
+
+    <!-- Modal -->
+    <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title fs-5" id="staticBackdropLabel"></h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Understood</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
+    const baseUrl = "https://abz-agency-test-task.ddev.site";
     let currentPage = 1;
     const usersPerPage = 6;
     const tableBody = document.querySelector('.js-users-table tbody');
@@ -90,7 +108,7 @@
 
     async function getUsers(page = 1, count = usersPerPage) {
         try {
-            const response = await fetch(`/api/v1/users?page=${page}&count=${count}`);
+            const response = await fetch(`${baseUrl}/api/v1/users?page=${page}&count=${count}`);
             if (!response.ok) {
                 throw new Error(`Response status: ${response.status}`);
             }
@@ -122,7 +140,7 @@
             <td>${user.email}</td>
             <td>${user.phone}</td>
             <td>${user.position}</td>
-            <td><img src="${user.photo}" alt="User Photo" width="70"></td>
+            <td><img src="${baseUrl}/storage/${user.photo}" alt="User Photo" width="70"></td>
         `;
 
         if (isNew) {
@@ -134,7 +152,7 @@
 
     async function loadPositions() {
         try {
-            const response = await fetch('/api/v1/positions');
+            const response = await fetch(`${baseUrl}/api/v1/positions`);
             if (!response.ok) throw new Error(`Response status: ${response.status}`);
 
             const data = await response.json();
@@ -155,15 +173,10 @@
         event.preventDefault();
 
         const authToken = localStorage.getItem('authToken');
-        if (!authToken) {
-            alert('Token not found! Please get the token first.');
-            return;
-        }
-
         const formData = new FormData(userForm);
 
         try {
-            const response = await fetch('/api/v1/users', {
+            const response = await fetch(`${baseUrl}/api/v1/users`, {
                 method: 'POST',
                 body: formData,
                 headers: {
@@ -221,7 +234,7 @@
 
     async function fetchUserById(userId) {
         try {
-            const response = await fetch(`/api/v1/users/${userId}`);
+            const response = await fetch(`${baseUrl}/api/v1/users/${userId}`);
             const userResponse = await response.json();
 
             if (userResponse.success) {
@@ -239,7 +252,7 @@
         event.preventDefault();
 
         try {
-            const response = await fetch('/api/v1/token', {
+            const response = await fetch(`${baseUrl}/api/v1/token`, {
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -248,8 +261,12 @@
             const data = await response.json();
             if (response.ok) {
                 localStorage.setItem('authToken', data.token);
-                await navigator.clipboard.writeText(data.token)
-                alert('Token copied to clipboard and saved!');
+
+                document.getElementById('staticBackdropLabel').textContent = 'Token Set';
+                document.querySelector('#staticBackdrop .modal-body').textContent = `Token has been successfully set: ${data.token}`;
+
+                const modal = new bootstrap.Modal(document.getElementById('staticBackdrop'));
+                modal.show();
             } else {
                 console.error('Failed to get token:', data.message);
             }

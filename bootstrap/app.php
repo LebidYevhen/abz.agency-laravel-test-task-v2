@@ -21,7 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($request->is('api/*')) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Unauthenticated. The token is expired or already used, please create a new one.',
+                    'message' => 'The token expired.',
                 ], 401);
             }
         });
